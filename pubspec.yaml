@@ -1,0 +1,62 @@
+name: demo
+description: "A new Flutter project."
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+# The following defines the version and build number for your application.
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.10.1 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # UI & State Management
+  google_fonts: ^6.1.0
+  provider: ^6.1.1
+  flutter_animate: ^4.2.0
+  
+  # Dashboard Charts (REQUIRED for new Dashboard)
+  fl_chart: ^0.68.0
+
+  # SMS & Permissions
+  flutter_sms_inbox: ^1.0.3
+  permission_handler: ^11.3.0
+
+  # Backend
+  supabase_flutter: ^2.8.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  
+  # Linter
+  flutter_lints: ^3.0.0
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter packages.
+flutter:
+  # The following line ensures that the Material Icons font is
+  # included with your application, so that you can use the icons in
+  # the material Icons class.
+  uses-material-design: true
+
+  # To add custom fonts to your application, add a fonts section here.
+  # MAKE SURE YOU HAVE A FOLDER NAMED 'fonts' IN YOUR ROOT DIRECTORY
+  # AND THESE FILES EXIST INSIDE IT.
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: fonts/Poppins-Bold.ttf
+          weight: 700
+        - asset: fonts/Poppins-Medium.ttf
+          weight: 500
+        - asset: fonts/Poppins-Regular.ttf
+          weight: 400
+        - asset: fonts/Poppins-SemiBold.ttf
+          weight: 600
