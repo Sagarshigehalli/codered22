@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'scanner_pay_page.dart';
 import '../dashboard/dashboard_screen.dart';
+// IMPORT THE NEW PAGE
+import '../investment/investment_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,9 +16,9 @@ class _HomePageState extends State<HomePage> {
 
   // The 3 main pages
   final List<Widget> _pages = [
-    const ScannerPayPage(),      // Your old Home with QR Scan
-    const DashboardScreen(),     // The new Graph UI
-    const Center(child: Text("Investment Page (Coming Soon)")),
+    const ScannerPayPage(),      // Home with QR Scan
+    const DashboardScreen(),     // The Graph UI
+    const InvestmentPage(),      // THE NEW INVESTMENT PAGE
   ];
 
   @override
@@ -29,7 +31,7 @@ class _HomePageState extends State<HomePage> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
-        selectedItemColor: const Color(0xFF4318FF),
+        selectedItemColor: const Color(0xFF2A9D8F), // Teal to match theme
         unselectedItemColor: Colors.grey,
         showUnselectedLabels: true,
         type: BottomNavigationBarType.fixed,

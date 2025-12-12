@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'intervention_widgets.dart';
+// Ensure this path is correct based on your folder structure
+import '../investment/investment_page.dart';
 
 class InterventionScreen extends StatefulWidget {
   final double transactionAmount;
@@ -13,7 +15,7 @@ class InterventionScreen extends StatefulWidget {
 }
 
 class _InterventionScreenState extends State<InterventionScreen> with TickerProviderStateMixin {
-  // FIXED: Removed the space in the variable name below
+  // FIXED: Correct variable name without spaces
   static const int _kTimerDurationSeconds = 25;
   
   int _secondsRemaining = _kTimerDurationSeconds;
@@ -147,7 +149,12 @@ class _InterventionScreenState extends State<InterventionScreen> with TickerProv
                     height: 56,
                     child: ElevatedButton(
                       onPressed: () {
-                        // TODO: Handle Investment logic here
+                        // Navigate to Investment Page
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const InvestmentPage()),
+                        );
+                        
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Redirecting to Investment...")));
                       },
                       style: ElevatedButton.styleFrom(
