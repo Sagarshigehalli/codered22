@@ -102,7 +102,7 @@ class UserDataProvider extends ChangeNotifier {
 
     // NOTE: On real devices, 10.0.2.2 usually fails. 
     // Ideally use your PC's local IP (e.g. 192.168.1.X)
-    final url = Uri.parse('http://10.0.2.2:8000/maa_insights'); 
+    final url = Uri.parse('http://10.145.45.242:8000/maa_insights'); 
 
     try {
       final response = await http.post(
