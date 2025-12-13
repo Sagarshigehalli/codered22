@@ -6,72 +6,124 @@ import '../../core/utils.dart';
 // Ensure you have created lib/screens/locked/locked_funds_page.dart for this import to work:
 import '../locked/locked_funds_page.dart';
 
-class MaaMoodCard extends StatelessWidget {
+class LivingMaaAvatar extends StatelessWidget {
   final UserDataProvider userData;
-  const MaaMoodCard({super.key, required this.userData});
+  const LivingMaaAvatar({super.key, required this.userData});
+
   @override
   Widget build(BuildContext context) {
-    Color bg;
+    // 1. Determine Logic
+    double ratio = userData.dailyLimit > 0
+        ? (userData.todaySpent / userData.dailyLimit)
+        : 0;
+
+    Color cardColor;
     String emoji;
-    switch (userData.maaMood) {
-      case "Angry":
-        bg = const Color(0xFFFFE5E5);
-        emoji = "😠";
-        break;
-      case "Worried":
-        bg = const Color(0xFFFFF4E5);
-        emoji = "🧐";
-        break;
-      default:
-        bg = const Color(0xFFE5F9F6);
-        emoji = "👵🏽";
+    String title;
+    String message;
+    IconData statusIcon;
+
+    if (ratio < 0.5) {
+      // HAPPY ZONE
+      cardColor = const Color(0xFFE5F9F6); // Soft Teal
+      emoji = "🥰"; // Or Image.asset('assets/maa_happy.png')
+      title = "Maa is Happy";
+      message = "My raja beta! You are saving so well. \n+10 Ashirwad waiting for you.";
+      statusIcon = Icons.stars;
+    } else if (ratio < 0.9) {
+      // SKEPTICAL ZONE
+      cardColor = const Color(0xFFFFF4E5); // Soft Orange
+      emoji = "🧐"; // Or Image.asset('assets/maa_skeptical.png')
+      title = "Maa is Watching";
+      message = "Beta, watch it. You are spending too fast. Slow down!";
+      statusIcon = Icons.warning_amber;
+    } else {
+      // ANGRY ZONE
+      cardColor = const Color(0xFFFFE5E5); // Soft Red
+      emoji = "😡"; // Or Image.asset('assets/maa_angry.png')
+      title = "Maa is Angry";
+      message = "Bas! No more spending today! Don't disappoint me.";
+      statusIcon = Icons.block;
     }
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(20),
+        color: cardColor,
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Colors.black.withOpacity(0.05)),
+        boxShadow: [
+          BoxShadow(
+            color: cardColor.withOpacity(0.5),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
-      child: Row(
+      child: Column(
         children: [
+          // Top Row: Streak & Status
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.local_fire_department, color: Colors.orange, size: 18),
+                    SizedBox(width: 4),
+                    Text("5 Day Streak", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                  ],
+                ),
+              ),
+              Icon(statusIcon, color: Colors.black26),
+            ],
+          ),
+          const SizedBox(height: 15),
+          // Center: Avatar
           Container(
-            padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(
+            height: 80,
+            width: 80,
+            decoration: BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
-            ),
-            child: Text(emoji, style: const TextStyle(fontSize: 32)),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Maa says:",
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  userData.maaMessage,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
+              border: Border.all(color: Colors.white, width: 3),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)
               ],
+            ),
+            child: Center(child: Text(emoji, style: const TextStyle(fontSize: 45))),
+          ).animate(onPlay: (c) => c.repeat(reverse: true))
+           .scale(begin: const Offset(1,1), end: const Offset(1.05, 1.05), duration: 2.seconds),
+
+          const SizedBox(height: 15),
+          // Bottom: Message
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF264653),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              color: const Color(0xFF264653).withOpacity(0.8),
+              height: 1.4,
             ),
           ),
         ],
       ),
-    ).animate().scale(duration: 400.ms, curve: Curves.easeOut);
+    );
   }
 }
 

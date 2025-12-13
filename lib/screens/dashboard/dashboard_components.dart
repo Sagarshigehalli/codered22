@@ -1,5 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/user_provider.dart';
 
 // --- COLORS ---
 class DashColors {
@@ -19,8 +21,39 @@ class DashColors {
 
 class SpendingDonutChart extends StatelessWidget {
   const SpendingDonutChart({super.key});
+
   @override
   Widget build(BuildContext context) {
+    final userData = Provider.of<UserDataProvider>(context);
+    final totalSpend = userData.thisMonthSpend;
+    final breakdown = userData.spendingBreakdown;
+
+    // Process Data for Chart: Top 4 categories + Others
+    List<MapEntry<String, double>> sortedEntries = breakdown.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    List<MapEntry<String, double>> topEntries = [];
+    double othersTotal = 0;
+
+    if (sortedEntries.length > 4) {
+      topEntries = sortedEntries.take(4).toList();
+      for (var i = 4; i < sortedEntries.length; i++) {
+        othersTotal += sortedEntries[i].value;
+      }
+      if (othersTotal > 0) topEntries.add(MapEntry("Others", othersTotal));
+    } else {
+      topEntries = sortedEntries;
+    }
+
+    // Colors Palette for dynamic assignment
+    final List<Color> palette = [
+      DashColors.green,
+      DashColors.orange,
+      DashColors.purple,
+      DashColors.blue,
+      DashColors.red,
+    ];
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(color: DashColors.cardBg, borderRadius: BorderRadius.circular(20)),
@@ -29,31 +62,62 @@ class SpendingDonutChart extends StatelessWidget {
         children: [
           const Text('Spending Overview', style: TextStyle(color: DashColors.textDark, fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 20),
-          SizedBox(
-            height: 220,
-            child: Stack(
-              children: [
-                PieChart(PieChartData(
-                  sectionsSpace: 0, centerSpaceRadius: 60,
-                  sections: [
-                    PieChartSectionData(color: DashColors.green, value: 34, radius: 25, showTitle: false),
-                    PieChartSectionData(color: DashColors.orange, value: 27, radius: 25, showTitle: false),
-                    PieChartSectionData(color: DashColors.purple, value: 11, radius: 25, showTitle: false),
-                    PieChartSectionData(color: DashColors.blue, value: 15, radius: 25, showTitle: false),
-                    PieChartSectionData(color: DashColors.red, value: 4, radius: 25, showTitle: false),
-                  ],
-                )),
-                const Center(child: Column(mainAxisSize: MainAxisSize.min, children: [Text("Total:", style: TextStyle(color: DashColors.textGrey)), Text("₹36,500", style: TextStyle(color: DashColors.textDark, fontSize: 22, fontWeight: FontWeight.bold))])),
-              ],
+          
+          if (totalSpend == 0) 
+            const SizedBox(
+              height: 220, 
+              child: Center(child: Text("No expenses yet this month.", style: TextStyle(color: Colors.grey)))
+            )
+          else
+            SizedBox(
+              height: 220,
+              child: Stack(
+                children: [
+                  PieChart(PieChartData(
+                    sectionsSpace: 0, 
+                    centerSpaceRadius: 60,
+                    sections: topEntries.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final data = entry.value;
+                      final percentage = (data.value / totalSpend * 100).round();
+                      
+                      return PieChartSectionData(
+                        color: palette[index % palette.length],
+                        value: data.value,
+                        radius: 25,
+                        showTitle: false, // Cleaner look
+                      );
+                    }).toList(),
+                  )),
+                  Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min, 
+                      children: [
+                        const Text("Total:", style: TextStyle(color: DashColors.textGrey)), 
+                        Text("₹${totalSpend.toStringAsFixed(0)}", style: const TextStyle(color: DashColors.textDark, fontSize: 22, fontWeight: FontWeight.bold))
+                      ]
+                    )
+                  ),
+                ],
+              ),
             ),
-          ),
+            
           const SizedBox(height: 20),
-          const Wrap(spacing: 10, runSpacing: 10, children: [
-            LegendItem(color: DashColors.green, label: "Groceries", val: "₹12,500"),
-            LegendItem(color: DashColors.orange, label: "Hotels", val: "₹9,800"),
-            LegendItem(color: DashColors.purple, label: "Fun", val: "₹4,200"),
-            LegendItem(color: DashColors.red, label: "Others", val: "₹1,500"),
-          ])
+          
+          if (totalSpend > 0)
+            Wrap(
+              spacing: 10, 
+              runSpacing: 10, 
+              children: topEntries.asMap().entries.map((entry) {
+                 final index = entry.key;
+                 final data = entry.value;
+                 return LegendItem(
+                   color: palette[index % palette.length], 
+                   label: data.key, 
+                   val: "₹${data.value.toStringAsFixed(0)}"
+                 );
+              }).toList()
+            )
         ],
       ),
     );
@@ -96,6 +160,9 @@ class SummaryStatCard extends StatelessWidget {
     );
   }
 }
+
+// ... Keep other widgets (RetirementCard, AiInsights, ComparisonChart) as they are since you didn't ask to connect them yet ...
+// Assuming they are static for now as per instructions "strictly don't change rest of that page" except data sources.
 
 class RetirementCard extends StatelessWidget {
   const RetirementCard({super.key});
