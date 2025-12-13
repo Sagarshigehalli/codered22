@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -10,8 +10,6 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final userData = Provider.of<UserDataProvider>(context);
-    final themeColor = const Color(0xFF264653); // Slate
-    final accentColor = const Color(0xFFE07A5F); // Terracotta
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F7F2),
@@ -19,115 +17,119 @@ class ProfilePage extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: themeColor),
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF264653)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text("My Report Card", style: TextStyle(color: themeColor, fontWeight: FontWeight.bold)),
+        title: Text("My Financial Profile", style: GoogleFonts.poppins(color: const Color(0xFF264653), fontWeight: FontWeight.w600)),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            // 1. HEADER: Avatar & Grade
-            Center(
-              child: Column(
+            // --- 1. PROFILE HEADER ---
+            Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFE07A5F), width: 3),
+                  ),
+                  child: const CircleAvatar(
+                    radius: 50,
+                    backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=11'),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  "Keerth", 
+                  style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: const Color(0xFF264653))
+                ),
+                Text(
+                  userData.indiaWealthRank, // "Top 10%"
+                  style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFFE07A5F), fontWeight: FontWeight.w600)
+                ),
+              ],
+            ).animate().fadeIn().scale(),
+
+            const SizedBox(height: 30),
+
+            // --- 2. GAMIFIED STREAK CARD ---
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFF9966), Color(0xFFFF5E62)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(color: const Color(0xFFFF5E62).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8))
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Stack(
-                    alignment: Alignment.bottomRight,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: accentColor, width: 3)),
-                        child: const CircleAvatar(radius: 50, backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=11')),
+                      Text("Current Streak", style: GoogleFonts.poppins(color: Colors.white.withOpacity(0.9), fontSize: 14)),
+                      Row(
+                        children: [
+                          Text("${userData.currentStreak}", style: GoogleFonts.poppins(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold)),
+                          const SizedBox(width: 5),
+                          const Text("Days", style: TextStyle(color: Colors.white, fontSize: 18)),
+                        ],
                       ),
                       Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(color: Colors.amber, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
-                        child: const Text("A+", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      ),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                        child: Text("Max: ${userData.maxStreak} Days", style: const TextStyle(color: Colors.white, fontSize: 12)),
+                      )
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  Text("Keerth", style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: themeColor)),
-                  Text(userData.financialGrade, style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600], fontWeight: FontWeight.w500)),
+                  const Icon(Icons.local_fire_department, color: Colors.white, size: 60)
+                      .animate(onPlay: (c) => c.repeat(reverse: true))
+                      .scale(begin: const Offset(1, 1), end: const Offset(1.1, 1.1), duration: 1.seconds),
                 ],
               ),
             ),
-            const SizedBox(height: 30),
 
-            // 2. STREAK STATS GRID
+            const SizedBox(height: 24),
+
+            // --- 3. STATS GRID ---
             Row(
               children: [
-                _buildStatCard("Current Streak", "${userData.currentStreak} Days", Icons.local_fire_department, Colors.orange),
+                _buildStatCard("Total Saved", "₹${userData.totalLifetimeSavings.toStringAsFixed(0)}", Icons.savings, Colors.green),
                 const SizedBox(width: 16),
-                _buildStatCard("Saved in Streak", "₹${userData.totalSavedInStreak.toStringAsFixed(0)}", Icons.savings, Colors.green),
+                _buildStatCard("Grade", userData.financialGrade, Icons.school, Colors.blue),
               ],
             ),
+
+            const SizedBox(height: 24),
+
+            // --- 4. BADGES SECTION ---
+            Align(alignment: Alignment.centerLeft, child: Text("Earned Badges", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF264653)))),
             const SizedBox(height: 16),
-            Row(
+            
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 3,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
               children: [
-                _buildStatCard("Best Streak", "${userData.maxStreak} Days", Icons.emoji_events, Colors.amber),
-                const SizedBox(width: 16),
-                _buildStatCard("Total Savings", "₹${(userData.totalLifetimeSavings/1000).toStringAsFixed(1)}k", Icons.account_balance_wallet, themeColor),
+                _buildBadge("Saver", "🏆", true),
+                _buildBadge("Streak", "🔥", true),
+                _buildBadge("Investor", "📈", false),
+                _buildBadge("Budget", "🛡️", true),
+                _buildBadge("Guru", "🧘", false),
+                _buildBadge("Maa's Fav", "❤️", true),
               ],
-            ),
-
-            const SizedBox(height: 30),
-
-            // 3. MONTHLY SAVINGS GRAPH
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Monthly Savings History", style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: themeColor)),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    height: 200,
-                    child: BarChart(
-                      BarChartData(
-                        gridData: FlGridData(show: false),
-                        titlesData: FlTitlesData(
-                          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          bottomTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              getTitlesWidget: (val, meta) {
-                                int index = val.toInt();
-                                if(index >= 0 && index < userData.monthlySavingsHistory.length) {
-                                  return Padding(
-                                    padding: const EdgeInsets.only(top: 8.0),
-                                    child: Text(userData.monthlySavingsHistory[index]['month'], style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                                  );
-                                }
-                                return const SizedBox();
-                              },
-                            )
-                          ),
-                        ),
-                        borderData: FlBorderData(show: false),
-                        barGroups: userData.monthlySavingsHistory.asMap().entries.map((e) {
-                          return BarChartGroupData(
-                            x: e.key,
-                            barRods: [
-                              BarChartRodData(
-                                toY: e.value['amount'],
-                                color: e.key == userData.monthlySavingsHistory.length - 1 ? accentColor : themeColor.withOpacity(0.3),
-                                width: 16,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                            ],
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            )
           ],
         ),
       ),
@@ -138,21 +140,51 @@ class ProfilePage extends StatelessWidget {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.05), blurRadius: 10)]),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
-              child: Icon(icon, color: color, size: 20),
-            ),
+            Icon(icon, color: color, size: 28),
             const SizedBox(height: 12),
-            Text(title, style: TextStyle(color: Colors.grey[500], fontSize: 11)),
-            Text(value, style: TextStyle(color: const Color(0xFF264653), fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(title, style: GoogleFonts.poppins(color: Colors.grey, fontSize: 12)),
+            Text(value, style: GoogleFonts.poppins(color: const Color(0xFF264653), fontSize: 18, fontWeight: FontWeight.bold)),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildBadge(String label, String emoji, bool unlocked) {
+    return Column(
+      children: [
+        Container(
+          height: 60,
+          width: 60,
+          decoration: BoxDecoration(
+            color: unlocked ? Colors.white : Colors.grey[200],
+            shape: BoxShape.circle,
+            boxShadow: unlocked ? [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 10)] : [],
+          ),
+          child: Center(
+            child: Text(
+              emoji, 
+              style: TextStyle(fontSize: 30, color: unlocked ? null : Colors.grey.withOpacity(0.5))
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label, 
+          style: GoogleFonts.poppins(
+            fontSize: 12, 
+            color: unlocked ? const Color(0xFF264653) : Colors.grey
+          )
+        )
+      ],
     );
   }
 }

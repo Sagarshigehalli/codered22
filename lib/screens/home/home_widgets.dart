@@ -57,6 +57,7 @@ class LivingMaaAvatar extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              // STREAK DISPLAY INSIDE MAA CARD
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(

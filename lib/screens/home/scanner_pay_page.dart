@@ -4,7 +4,8 @@ import '../../providers/user_provider.dart';
 import '../../core/utils.dart';
 import '../payment/qr_scanner.dart';
 import 'home_widgets.dart';
-import 'transaction_history_page.dart'; // Import history page
+import 'transaction_history_page.dart'; 
+import '../profile/profile_page.dart'; // IMPORT THE PROFILE PAGE
 
 class ScannerPayPage extends StatelessWidget {
   const ScannerPayPage({super.key});
@@ -16,16 +17,61 @@ class ScannerPayPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF9F7F2),
       appBar: AppBar(
-        title: const Row(children: [
-          CircleAvatar(backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=11')),
-          SizedBox(width: 12),
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text("Namaste", style: TextStyle(fontSize: 14, color: Colors.grey)),
-            Text("Keerth", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF264653)))
-          ])
-        ]),
+        automaticallyImplyLeading: false, // Remove default back button
+        title: GestureDetector(
+          // CLICKING HEADER GOES TO PROFILE PAGE
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ProfilePage()),
+            );
+          },
+          child: Row(
+            children: [
+              const CircleAvatar(backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=11')),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("Namaste", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  Row(
+                    children: [
+                      const Text("Keerth", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF264653))),
+                      const SizedBox(width: 8),
+                      // --- STREAK BADGE IN HEADER ---
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFE5D9), // Light orange bg
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFFF9966)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.local_fire_department, color: Color(0xFFFF5E62), size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              "${userData.currentStreak}", 
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFFE07A5F))
+                            ),
+                          ],
+                        ),
+                      )
+                    ],
+                  )
+                ],
+              )
+            ],
+          ),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [
+           IconButton(
+             icon: const Icon(Icons.notifications_outlined, color: Color(0xFF264653)),
+             onPressed: () {},
+           )
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -33,7 +79,6 @@ class ScannerPayPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Updated to use the new Avatar widget
               LivingMaaAvatar(userData: userData),
               const SizedBox(height: 24),
               const BalanceCard(),
@@ -43,7 +88,6 @@ class ScannerPayPage extends StatelessWidget {
               const QuickActionsGrid(),
               const SizedBox(height: 24),
               
-              // --- UPDATED TRANSACTION LIST LOGIC ---
               const Text("Recent Spending (Last 10)", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF264653))),
               const SizedBox(height: 10),
               
@@ -70,10 +114,7 @@ class ScannerPayPage extends StatelessWidget {
                       children: [
                         Text(
                           "View Full History",
-                          style: TextStyle(
-                            color: Color(0xFF264653),
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: TextStyle(color: Color(0xFF264653), fontWeight: FontWeight.w600),
                         ),
                         SizedBox(width: 8),
                         Icon(Icons.arrow_forward, size: 16, color: Color(0xFF264653)),
