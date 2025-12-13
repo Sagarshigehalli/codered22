@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/sms_parser.dart';
 
@@ -12,6 +14,12 @@ class UserDataProvider extends ChangeNotifier {
   double debtPaid = 0.0;
   double savingsRate = 0.0;
   Map<String, double> spendingBreakdown = {}; 
+
+  // --- AI INSIGHT STATES ---
+  String? aiRemark;
+  String? aiAdvice;
+  String? aiSentiment; // 'happy', 'neutral', 'angry', 'worried'
+  bool isAiLoading = false;
 
   // --- CORE FINANCIAL DATA ---
   double totalBalance = 0.0;
@@ -54,12 +62,18 @@ class UserDataProvider extends ChangeNotifier {
   double get remainingDailyLimit => dailyLimit - todaySpent;
 
   String get maaMood {
+    if (aiSentiment != null) return aiSentiment!;
+    // Fallback Logic
     if (todaySpent > dailyLimit) return "Angry";
     if (todaySpent > (dailyLimit * 0.8)) return "Worried";
     return "Happy";
   }
 
   String get maaMessage {
+    if (aiAdvice != null && aiRemark != null) {
+      return "$aiRemark\n$aiAdvice";
+    }
+    // Fallback Logic
     if (todaySpent > dailyLimit) return "Bas kar! No more spending today.";
     if (todaySpent > (dailyLimit * 0.8)) return "Watch it. You are working for free now.";
     return "I am proud of you beta. Keep saving.";
@@ -81,9 +95,45 @@ class UserDataProvider extends ChangeNotifier {
     return "Good job! You are living within your means.";
   }
 
-  // --- METHODS ---
+  // --- 1. UPDATED: FETCH AI INSIGHTS (With 5s Timeout) ---
+  Future<void> fetchMaaInsight(String tag, double amount) async {
+    isAiLoading = true;
+    notifyListeners();
 
-  // 1. FETCH DASHBOARD DATA (Supabase)
+    // NOTE: On real devices, 10.0.2.2 usually fails. 
+    // Ideally use your PC's local IP (e.g. 192.168.1.X)
+    final url = Uri.parse('http://10.0.2.2:8000/maa_insights'); 
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "tag": tag,
+          "amount": amount,
+          "spending_habits": null 
+        }),
+      ).timeout(const Duration(seconds: 5)); // Stop waiting after 5 seconds
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        aiRemark = data['remark'];
+        aiAdvice = data['advice'];
+        aiSentiment = data['sentiment']; 
+        notifyListeners();
+      } else {
+        debugPrint("AI API Error: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("AI Connection Error (Continuing app flow): $e");
+    } finally {
+      // Ensure loading stops so the button works again
+      isAiLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // --- 2. FETCH DASHBOARD DATA ---
   Future<void> fetchDashboardData() async {
     final user = _supabase.auth.currentUser;
     if (user == null) return;
@@ -163,12 +213,11 @@ class UserDataProvider extends ChangeNotifier {
     }
   }
 
-  // 2. PARSE SMS & SAVE TO SUPABASE
+  // --- 3. PARSE SMS & SAVE TO SUPABASE ---
   Future<void> processParsedMessages(
     List<Map<String, dynamic>> rawMessageObjects,
   ) async {
     final user = _supabase.auth.currentUser;
-    // Note: We proceed even if user is null for offline testing, but won't save to DB
     
     List<Map<String, dynamic>> parsedTxns = [];
     List<Map<String, dynamic>> txnsToInsert = []; 
@@ -231,7 +280,7 @@ class UserDataProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // 3. STUDENT STATS LOGIC
+  // --- 4. STUDENT STATS LOGIC ---
   void _calculateStudentStats(List<Map<String, dynamic>> txns) {
     frequentDestinations = {};
     expenseDistribution = {};
@@ -293,7 +342,7 @@ class UserDataProvider extends ChangeNotifier {
     top3HighestSpends = expenses.take(3).toList();
   }
 
-  // 4. PROFILE FINALIZATION
+  // --- 5. PROFILE FINALIZATION (HELPER METHODS) ---
   Future<void> finalizeUnsalariedProfile({
     required double confirmedIncome,
     required double workHours,
@@ -391,7 +440,7 @@ class UserDataProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // 5. HELPER METHODS
+  // --- 6. ADDITIONAL HELPERS ---
   bool addSubExpense(String category, String name, double amount) {
     final bucket = lockedBreakdown[category];
     double currentUsed = 0;

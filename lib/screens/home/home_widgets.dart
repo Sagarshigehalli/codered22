@@ -3,8 +3,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
 import '../../core/utils.dart';
-// Ensure you have created lib/screens/locked/locked_funds_page.dart for this import to work:
 import '../locked/locked_funds_page.dart';
+// IMPORT THE NEW HISTORY PAGE
+import 'transaction_history_page.dart';
 
 class LivingMaaAvatar extends StatelessWidget {
   final UserDataProvider userData;
@@ -12,37 +13,27 @@ class LivingMaaAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Determine Logic
-    double ratio = userData.dailyLimit > 0
-        ? (userData.todaySpent / userData.dailyLimit)
-        : 0;
-
     Color cardColor;
     String emoji;
     String title;
-    String message;
     IconData statusIcon;
 
-    if (ratio < 0.5) {
-      // HAPPY ZONE
-      cardColor = const Color(0xFFE5F9F6); // Soft Teal
-      emoji = "🥰"; // Or Image.asset('assets/maa_happy.png')
+    String mood = userData.maaMood.toLowerCase();
+
+    if (mood.contains("happy") || mood.contains("good")) {
+      cardColor = const Color(0xFFE5F9F6);
+      emoji = "🥰"; 
       title = "Maa is Happy";
-      message = "My raja beta! You are saving so well. \n+10 Ashirwad waiting for you.";
       statusIcon = Icons.stars;
-    } else if (ratio < 0.9) {
-      // SKEPTICAL ZONE
-      cardColor = const Color(0xFFFFF4E5); // Soft Orange
-      emoji = "🧐"; // Or Image.asset('assets/maa_skeptical.png')
+    } else if (mood.contains("worried") || mood.contains("neutral") || mood.contains("caution")) {
+      cardColor = const Color(0xFFFFF4E5);
+      emoji = "🧐"; 
       title = "Maa is Watching";
-      message = "Beta, watch it. You are spending too fast. Slow down!";
       statusIcon = Icons.warning_amber;
     } else {
-      // ANGRY ZONE
-      cardColor = const Color(0xFFFFE5E5); // Soft Red
-      emoji = "😡"; // Or Image.asset('assets/maa_angry.png')
+      cardColor = const Color(0xFFFFE5E5);
+      emoji = "😡"; 
       title = "Maa is Angry";
-      message = "Bas! No more spending today! Don't disappoint me.";
       statusIcon = Icons.block;
     }
 
@@ -63,7 +54,6 @@ class LivingMaaAvatar extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Top Row: Streak & Status
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -73,11 +63,11 @@ class LivingMaaAvatar extends StatelessWidget {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.local_fire_department, color: Colors.orange, size: 18),
-                    SizedBox(width: 4),
-                    Text("5 Day Streak", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                    const Icon(Icons.local_fire_department, color: Colors.orange, size: 18),
+                    const SizedBox(width: 4),
+                    Text("${userData.currentStreak} Day Streak", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                   ],
                 ),
               ),
@@ -85,7 +75,6 @@ class LivingMaaAvatar extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 15),
-          // Center: Avatar
           Container(
             height: 80,
             width: 80,
@@ -102,7 +91,6 @@ class LivingMaaAvatar extends StatelessWidget {
            .scale(begin: const Offset(1,1), end: const Offset(1.05, 1.05), duration: 2.seconds),
 
           const SizedBox(height: 15),
-          // Bottom: Message
           Text(
             title,
             style: const TextStyle(
@@ -113,7 +101,7 @@ class LivingMaaAvatar extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            message,
+            userData.maaMessage,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13,
@@ -144,7 +132,6 @@ class BalanceCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            // REMOVED 'const' here because withOpacity is dynamic
             color: const Color(0xFF2A9D8F).withOpacity(0.4),
             blurRadius: 15,
             offset: const Offset(0, 10),
@@ -155,7 +142,6 @@ class BalanceCard extends StatelessWidget {
         children: [
           Text(
             "Free to Spend",
-            // REMOVED 'const' because withOpacity is dynamic
             style: TextStyle(
               color: Colors.white.withOpacity(0.8),
               fontSize: 14,
@@ -179,7 +165,6 @@ class BalanceCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                // REMOVED 'const' because withOpacity is dynamic
                 color: Colors.black.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -217,39 +202,48 @@ class QuickActionsGrid extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _actionButton(context, Icons.person, "Contacts"),
-        _actionButton(context, Icons.account_balance, "Bank"),
-        _actionButton(context, Icons.history, "History"),
-        _actionButton(context, Icons.settings, "Manage"),
+        _actionButton(context, Icons.person, "Contacts", () {}),
+        _actionButton(context, Icons.account_balance, "Bank", () {}),
+        // UPDATED: Navigate to History Page
+        _actionButton(context, Icons.history, "History", () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const TransactionHistoryPage()),
+          );
+        }),
+        _actionButton(context, Icons.settings, "Manage", () {}),
       ],
     );
   }
 
-  Widget _actionButton(BuildContext context, IconData icon, String label) {
-    return Column(
-      children: [
-        Container(
-          height: 60,
-          width: 60,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              )
-            ],
+  Widget _actionButton(BuildContext context, IconData icon, String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            height: 60,
+            width: 60,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Icon(icon, color: Theme.of(context).primaryColor),
           ),
-          child: Icon(icon, color: Theme.of(context).primaryColor),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-        ),
-      ],
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+          ),
+        ],
+      ),
     );
   }
 }

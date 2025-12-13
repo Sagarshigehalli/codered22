@@ -4,7 +4,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
 import '../../core/utils.dart';
-// IMPORT THE NEW INTERVENTION SCREEN
 import '../intervention/intervention_screen.dart'; 
 
 class PaymentDetailsPage extends StatefulWidget {
@@ -17,6 +16,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _tagSearchController = TextEditingController();
   String _selectedTag = "Groceries";
+  bool _isProcessing = false; // Manages loading state
 
   @override
   Widget build(BuildContext context) {
@@ -130,14 +130,26 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
               height: 56,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF264653), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), elevation: 5),
-                onPressed: () {
+                onPressed: _isProcessing ? null : () async {
                   double amount = double.tryParse(_amountController.text) ?? 0;
                   if (amount <= 0) return;
 
-                  // --- THIS IS THE CRITICAL LOGIC ---
-                  // If it's NOT a locked/bill payment AND it triggers the spending limit (intervention needed)
+                  setState(() => _isProcessing = true);
+
+                  // 1. Attempt API Call with Fail-Safe Logic
+                  try {
+                    // This will now respect the 5s timeout set in user_provider.dart
+                    await userData.fetchMaaInsight(_selectedTag, amount);
+                  } catch (e) {
+                    debugPrint("API failed gracefully, continuing payment flow...");
+                  }
+
+                  if (!mounted) return;
+                  setState(() => _isProcessing = false);
+
+                  // 2. CHECK LOGIC (Intervention vs Direct Pay)
                   if (!isLocked && userData.requiresIntervention(amount)) {
-                    // Navigate to the NEW Intervention Screen
+                    // Navigate to Intervention (Financial Discipline Page)
                     Navigator.push(
                       context,
                       MaaPageRoute(
@@ -145,13 +157,19 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                       ),
                     );
                   } else {
-                    // Otherwise, pay directly
+                    // Direct Pay
                     userData.executeTransaction(amount, _selectedTag);
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Payment Successful!"), backgroundColor: Colors.green));
-                    Navigator.popUntil(context, (r) => r.isFirst);
+                    
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Payment Successful!"), backgroundColor: Colors.green));
+                      // Go back to Home
+                      Navigator.popUntil(context, (r) => r.isFirst);
+                    }
                   }
                 },
-                child: const Text("Pay Now", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                child: _isProcessing 
+                  ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text("Pay Now", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
